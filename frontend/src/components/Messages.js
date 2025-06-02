@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import api from "../utils/api";
 import Sidebar from "./Sidebar";
 
-const Chats = () => {
+const Messages = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +18,7 @@ const Chats = () => {
 
     try {
       // Axios call — no need for headers/body like fetch
-      const res = await api.post("/chats", { question });
+      const res = await api.post("/messages", { question });
       const data = res.data;
 
       setMessages((prev) => [
@@ -100,4 +100,4 @@ const Chats = () => {
   );
 };
 
-export default Chats;
+export default Messages;
