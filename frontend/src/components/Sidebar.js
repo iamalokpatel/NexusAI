@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
-import api from "../utils/api"; // your axios instance or fetch wrapper
+import React, { useState, useEffect, useRef } from "react";
+import api from "../utils/api";
 
 const Sidebar = ({ onSelectChat, selectedChatId }) => {
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingChatId, setEditingChatId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
+
+  const editInputRef = useRef(null);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -26,6 +28,12 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
     fetchChats();
   }, []);
 
+  useEffect(() => {
+    if (editingChatId && editInputRef.current) {
+      editInputRef.current.focus();
+    }
+  }, [editingChatId]);
+
   const handleNewChat = async () => {
     const userId = localStorage.getItem("userId");
     if (!userId) {
@@ -42,7 +50,7 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
 
       const savedChat = response.data;
       setChats([savedChat, ...chats]);
-      if (onSelectChat) onSelectChat(savedChat._id);
+      onSelectChat?.(savedChat._id);
     } catch (error) {
       console.error("Error creating chat:", error);
       alert("Failed to create chat.");
@@ -60,12 +68,10 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
 
   const handleEditSubmit = async (chatId) => {
     try {
-      // Update chat title on backend
       await api.put(`/chats/${chatId}`, { title: editTitle });
 
-      // Update local state after success
-      setChats(
-        chats.map((chat) =>
+      setChats((prev) =>
+        prev.map((chat) =>
           (chat._id || chat.id) === chatId
             ? { ...chat, title: editTitle }
             : chat
@@ -88,10 +94,9 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
 
       if (selectedChatId === chatId) {
         if (updatedChats.length > 0) {
-          if (onSelectChat)
-            onSelectChat(updatedChats[0]._id || updatedChats[0].id);
+          onSelectChat?.(updatedChats[0]._id || updatedChats[0].id);
         } else {
-          if (onSelectChat) onSelectChat(null);
+          onSelectChat?.(null);
         }
       }
     } catch (error) {
@@ -105,6 +110,7 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
       <button
         onClick={handleNewChat}
         className="w-full bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded mb-4"
+        aria-label="Create new chat"
       >
         + New Chat
       </button>
@@ -122,27 +128,30 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
 
         {chats.map((chat) => {
           const chatId = chat._id || chat.id;
+
           return (
             <div
               key={chatId}
-              onClick={() => onSelectChat && onSelectChat(chatId)}
+              onClick={() => onSelectChat?.(chatId)}
               className={`bg-gray-800 p-3 rounded hover:bg-gray-700 flex justify-between items-center cursor-pointer ${
                 selectedChatId === chatId ? "border-2 border-blue-500" : ""
               }`}
+              role="button"
+              aria-pressed={selectedChatId === chatId}
             >
               {editingChatId === chatId ? (
                 <>
                   <input
+                    ref={editInputRef}
                     type="text"
                     value={editTitle}
                     onChange={handleEditChange}
-                    className="bg-gray-700 text-white rounded px-2 py-1 flex-grow mr-2"
                     onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleEditSubmit(chatId);
-                      }
+                      if (e.key === "Enter") handleEditSubmit(chatId);
                     }}
+                    className="bg-gray-700 text-white rounded px-2 py-1 flex-grow mr-2"
+                    aria-label="Edit chat title"
                   />
                   <button
                     onClick={(e) => {
@@ -156,7 +165,7 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
                 </>
               ) : (
                 <>
-                  <span>{chat.title}</span>
+                  <span className="truncate max-w-[120px]">{chat.title}</span>
 
                   <div className="relative group">
                     <button

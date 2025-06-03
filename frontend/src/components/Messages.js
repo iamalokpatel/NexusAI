@@ -6,23 +6,31 @@ const Messages = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [selectedChatId, setSelectedChatId] = useState(null); // New state to track selected chat
+  const [selectedChatId, setSelectedChatId] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // When a chat is selected from Sidebar, load its messages
   const handleChatSelect = async (chatId) => {
     setSelectedChatId(chatId);
-    setMessages([]); // Clear previous messages while loading
+    setMessages([]);
     if (!chatId) return;
 
     try {
       const res = await api.get(`/messages/${chatId}`);
-      setMessages(
-        res.data.map((msg) => ({
-          role: msg.answer ? "cohere" : "user", // adjust if you store role differently
-          content: msg.question || msg.answer || "",
-        }))
-      );
+      const chatMessages = [];
+
+      res.data.forEach((msg) => {
+        if (msg.question) {
+          chatMessages.push({ role: "user", content: msg.question });
+        }
+        if (msg.answer) {
+          chatMessages.push({
+            role: msg.role || "cohere",
+            content: msg.answer,
+          });
+        }
+      });
+
+      setMessages(chatMessages);
     } catch (err) {
       console.error("Failed to fetch messages for chat", err);
     }
@@ -32,23 +40,21 @@ const Messages = () => {
     const question = input.trim();
     if (!question || loading || !selectedChatId) return;
 
-    // Add user's message
     setMessages((prev) => [...prev, { role: "user", content: question }]);
     setInput("");
     setLoading(true);
 
     try {
-      // Pass selectedChatId along with question
       const res = await api.post("/messages", {
         question,
         chatId: selectedChatId,
       });
-      const data = res.data;
 
-      const role = data.from === "database" ? "database" : "cohere";
-      const fullAnswer = data.message?.answer || "";
+      const { message, from } = res.data;
+      const role =
+        message?.role || (from === "database" ? "database" : "cohere");
+      const fullAnswer = message?.answer || "";
 
-      // Add empty response to animate typing
       setMessages((prev) => [...prev, { role, content: "" }]);
 
       for (let i = 0; i < fullAnswer.length; i++) {
@@ -80,17 +86,29 @@ const Messages = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const getRoleLabel = (role) => {
+    switch (role) {
+      case "user":
+        return "You";
+      case "cohere":
+        return "Cohere";
+      case "database":
+        return "Memory";
+      case "error":
+        return "Error";
+      default:
+        return "AI";
+    }
+  };
+
   return (
     <div className="w-full flex" role="main" aria-label="Message with Cohere">
-      <div>
-        {/* Pass handler to Sidebar to select chat */}
-        <Sidebar
-          onSelectChat={handleChatSelect}
-          selectedChatId={selectedChatId}
-        />
-      </div>
-      <div className="w-full flex flex-col">
-        <h1 className="text-xl font-bold mb-4 flex center justify-center">
+      <Sidebar
+        onSelectChat={handleChatSelect}
+        selectedChatId={selectedChatId}
+      />
+      <div className="w-full flex flex-col p-4">
+        <h1 className="text-xl font-bold mb-4 text-center">
           Message with OpenApi
         </h1>
 
@@ -105,6 +123,7 @@ const Messages = () => {
                 : "Select a chat to start messaging."}
             </div>
           )}
+
           {messages.map((msg, idx) => (
             <div
               key={idx}
@@ -118,9 +137,10 @@ const Messages = () => {
                   : "bg-red-200 text-left"
               }`}
             >
-              <strong>{msg.role}:</strong> {msg.content}
+              <strong>{getRoleLabel(msg.role)}:</strong> {msg.content}
             </div>
           ))}
+
           <div ref={messagesEndRef} />
         </div>
 

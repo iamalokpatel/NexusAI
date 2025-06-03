@@ -28,11 +28,14 @@ export const handleMessage = async (req, res) => {
     // If no messages yet, generate answer and save
     if (allQuestions.length === 0) {
       const answer = await callCohere(trimmedQuestion);
+
       const savedMessage = await Message.create({
         chatId,
         question: trimmedQuestion,
         answer,
+        role: "cohere", // explicitly set role
       });
+
       return res.json({ from: "cohere", message: savedMessage });
     }
 
@@ -45,7 +48,10 @@ export const handleMessage = async (req, res) => {
     if (bestMatch.rating >= SIMILARITY_THRESHOLD) {
       return res.json({
         from: "database",
-        message: allMessages[bestMatchIndex],
+        message: {
+          ...allMessages[bestMatchIndex]._doc,
+          role: "database", // override role for display
+        },
       });
     }
 
@@ -55,6 +61,7 @@ export const handleMessage = async (req, res) => {
       chatId,
       question: trimmedQuestion,
       answer,
+      role: "cohere", // explicitly set role
     });
 
     res.json({ from: "cohere", message: savedMessage });
@@ -74,7 +81,7 @@ export const getMessagesByChat = async (req, res) => {
     }
 
     const messages = await Message.find({ chatId }).sort({ createdAt: 1 });
-
+    console.log(messages);
     res.status(200).json(messages);
   } catch (err) {
     console.error("Error in getMessagesByChat:", err);
