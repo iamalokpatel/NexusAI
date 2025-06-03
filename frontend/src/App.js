@@ -11,6 +11,24 @@ function App() {
         <Route path="/" element={<Messages />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        {/* 404 fallback route */}
+        <Route
+          path="*"
+          element={
+            <div
+              style={{
+                height: "100vh",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                flexDirection: "column",
+              }}
+            >
+              <h1>404 - Page Not Found</h1>
+              <a href="/">Go back to Home</a>
+            </div>
+          }
+        />
       </Routes>
     </Router>
   );
