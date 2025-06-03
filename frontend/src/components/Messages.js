@@ -1,13 +1,73 @@
 import React, { useState, useRef, useEffect } from "react";
 import api from "../utils/api";
 import Sidebar from "./Sidebar";
+import Navbar from "./Navbar";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 const Messages = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // 🔍 Render message with code highlighting
+  const renderMessageContent = (content) => {
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/gm;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = codeBlockRegex.exec(content)) !== null) {
+      const beforeCode = content.slice(lastIndex, match.index);
+      const language = match[1] || "javascript";
+      const code = match[2];
+
+      if (beforeCode.trim()) {
+        parts.push(
+          <p key={`text-${lastIndex}`} className="mb-2 leading-relaxed">
+            {beforeCode.trim()}
+          </p>
+        );
+      }
+
+      parts.push(
+        <div
+          key={`code-${match.index}`}
+          className="my-2 rounded overflow-auto border border-gray-700"
+        >
+          <SyntaxHighlighter
+            language={language}
+            style={vscDarkPlus}
+            wrapLongLines={true}
+            customStyle={{
+              margin: 0,
+              backgroundColor: "#1e1e1e",
+              fontSize: "0.85rem",
+              borderRadius: "0.5rem",
+            }}
+          >
+            {code}
+          </SyntaxHighlighter>
+        </div>
+      );
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    const remainingText = content.slice(lastIndex).trim();
+    if (remainingText) {
+      parts.push(
+        <p key={`text-end`} className="mt-2 leading-relaxed">
+          {remainingText}
+        </p>
+      );
+    }
+
+    return parts.length > 0 ? parts : <p>{content}</p>;
+  };
 
   const handleChatSelect = async (chatId) => {
     setSelectedChatId(chatId);
@@ -107,13 +167,10 @@ const Messages = () => {
         onSelectChat={handleChatSelect}
         selectedChatId={selectedChatId}
       />
-      <div className="w-full flex flex-col p-4">
-        <h1 className="text-xl font-bold mb-4 text-center">
-          Message with OpenApi
-        </h1>
-
+      <div className="w-full flex flex-col pb-4 bg-[#212121]">
+        <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
         <div
-          className="space-y-2 h-96 overflow-y-scroll border rounded p-2 bg-gray-100 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 flex-grow"
+          className="space-y-2 h-96 overflow-y-scroll p-2 bg-[#212121] scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 flex-grow text-sm text-white border-t border-black"
           aria-live="polite"
         >
           {messages.length === 0 && !loading && (
@@ -127,26 +184,27 @@ const Messages = () => {
           {messages.map((msg, idx) => (
             <div
               key={idx}
-              className={`p-2 rounded whitespace-pre-wrap ${
+              className={`p-3 rounded whitespace-pre-wrap ${
                 msg.role === "user"
-                  ? "bg-blue-200 text-right"
+                  ? " text-white text-right"
                   : msg.role === "cohere"
-                  ? "bg-green-200 text-left"
+                  ? " text-white text-left"
                   : msg.role === "database"
-                  ? "bg-yellow-200 text-left"
-                  : "bg-red-200 text-left"
+                  ? "bg-yellow-600 text-black text-left"
+                  : "bg-red-600 text-white text-left"
               }`}
             >
-              <strong>{getRoleLabel(msg.role)}:</strong> {msg.content}
+              <strong>{getRoleLabel(msg.role)}:</strong>
+              <div>{renderMessageContent(msg.content)}</div>
             </div>
           ))}
 
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="mt-4 flex">
+        <div className="mt-4 flex px-2">
           <input
-            className="flex-1 border rounded p-2"
+            className="flex-1 border rounded p-2 bg-gray-100 text-black"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={

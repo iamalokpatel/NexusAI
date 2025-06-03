@@ -106,7 +106,7 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
   };
 
   return (
-    <div className="w-64 bg-gray-900 text-white h-screen p-4 flex flex-col">
+    <div className="w-64 bg-[#181818] text-white h-screen p-4 flex flex-col">
       <button
         onClick={handleNewChat}
         className="w-full bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded mb-4"
