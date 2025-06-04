@@ -1,4 +1,3 @@
-// services/cohereService.js
 import fetch from "node-fetch";
 
 export const callCohere = async (question) => {

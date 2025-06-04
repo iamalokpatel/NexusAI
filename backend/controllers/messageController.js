@@ -19,28 +19,24 @@ export const handleMessage = async (req, res) => {
 
     const trimmedQuestion = question.trim().toLowerCase();
 
-    // 🔄 Get all messages across all chats for similarity check
+    // Get all messages across all chats for similarity check
     const allMessages = await Message.find({});
     const allQuestions = allMessages
       .map((msg) => msg.question?.toLowerCase())
       .filter(Boolean);
 
-    // 🔍 Check for similar question in all chats
     const { bestMatch, bestMatchIndex } = stringSimilarity.findBestMatch(
       trimmedQuestion,
       allQuestions
     );
 
     if (bestMatch.rating >= SIMILARITY_THRESHOLD) {
-      // ♻️ Reuse answer from database
       const reusedAnswer = allMessages[bestMatchIndex].answer;
-
-      // 📥 Still store this new message under current chatId
       const savedMessage = await Message.create({
         chatId,
         question: trimmedQuestion,
         answer: reusedAnswer,
-        role: "database", // mark reused
+        role: "database",
       });
 
       return res.json({
@@ -49,7 +45,6 @@ export const handleMessage = async (req, res) => {
       });
     }
 
-    // 🤖 If not found, generate new answer using Cohere
     const answer = await callCohere(trimmedQuestion);
 
     const savedMessage = await Message.create({

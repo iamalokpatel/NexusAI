@@ -9,7 +9,7 @@ import {
 
 const router = express.Router();
 
-// Sample route for user registration
+// Sample routes for user
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
