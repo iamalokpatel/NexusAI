@@ -190,12 +190,12 @@ const Messages = () => {
         </div>
       )}
 
-      <div className="w-full flex flex-col pb-4 bg-[#212121]">
+      <div className="w-full flex flex-col pb-12 md:pb-6 bg-[#212121] h-screen md:h-auto">
         <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
 
         {/* Toggle Sidebar Button on Mobile */}
         <button
-          className="md:hidden p-4 text-white text-xl"
+          className="md:hidden pb-4 pl-4 text-white text-xl self-start"
           onClick={() => setSidebarOpen(true)}
           aria-label="Open Sidebar"
         >
@@ -203,7 +203,8 @@ const Messages = () => {
         </button>
 
         <div
-          className="space-y-2 h-96 overflow-y-scroll p-2 bg-[#212121] scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 flex-grow text-sm text-white border-t border-black"
+          className="space-y-2 overflow-y-scroll p-2 bg-[#212121] scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 flex-grow text-sm text-white border-t border-black
+  h-screen md:h-96"
           aria-live="polite"
         >
           {messages.length === 0 && !loading && (
@@ -231,7 +232,7 @@ const Messages = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="mt-4 flex justify-center px-4">
+        <div className="mt-5 flex justify-center px-4">
           <div className="relative w-full max-w-2xl px-2">
             <input
               className="w-full rounded-full p-8 pr-14 bg-[#252525] text-white shadow-[0_4px_20px_rgba(0,0,0,0.6)] 
