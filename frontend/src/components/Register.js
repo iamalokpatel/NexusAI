@@ -20,7 +20,7 @@ const Register = () => {
       if (response.status === 201) {
         localStorage.setItem("userId", response.data.user._id);
         alert("Registration Successful");
-        navigate("/login"); // Use route as per React Router
+        navigate("/login");
       }
     } catch (error) {
       console.error("Error registering", error);

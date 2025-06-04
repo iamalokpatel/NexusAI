@@ -18,33 +18,33 @@ export const handleMessage = async (req, res) => {
     }
 
     const trimmedQuestion = question.trim().toLowerCase();
-
-    // Get all messages across all chats for similarity check
     const allMessages = await Message.find({});
     const allQuestions = allMessages
-      .map((msg) => msg.question?.toLowerCase())
-      .filter(Boolean);
+      .map((msg) =>
+        typeof msg.question === "string" ? msg.question.toLowerCase() : null
+      )
+      .filter((q) => typeof q === "string" && q.trim() !== "");
+    if (allQuestions.length > 0) {
+      const { bestMatch, bestMatchIndex } = stringSimilarity.findBestMatch(
+        trimmedQuestion,
+        allQuestions
+      );
 
-    const { bestMatch, bestMatchIndex } = stringSimilarity.findBestMatch(
-      trimmedQuestion,
-      allQuestions
-    );
+      if (bestMatch.rating >= SIMILARITY_THRESHOLD) {
+        const reusedAnswer = allMessages[bestMatchIndex].answer;
+        const savedMessage = await Message.create({
+          chatId,
+          question: trimmedQuestion,
+          answer: reusedAnswer,
+          role: "database",
+        });
 
-    if (bestMatch.rating >= SIMILARITY_THRESHOLD) {
-      const reusedAnswer = allMessages[bestMatchIndex].answer;
-      const savedMessage = await Message.create({
-        chatId,
-        question: trimmedQuestion,
-        answer: reusedAnswer,
-        role: "database",
-      });
-
-      return res.json({
-        from: "database",
-        message: savedMessage,
-      });
+        return res.json({
+          from: "database",
+          message: savedMessage,
+        });
+      }
     }
-
     const answer = await callCohere(trimmedQuestion);
 
     const savedMessage = await Message.create({

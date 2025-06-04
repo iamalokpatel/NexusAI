@@ -8,7 +8,6 @@ const Navbar = () => {
   const timeoutRef = useRef(null);
   const navigate = useNavigate();
 
-  // Check localStorage token on mount and on 'authChange' event
   useEffect(() => {
     const checkLogin = () => {
       const token = localStorage.getItem("token");
@@ -22,12 +21,12 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // remove token on logout
+    localStorage.removeItem("token");
     localStorage.removeItem("userId");
     setIsLoggedIn(false);
     setShowMenu(false);
     navigate("/login");
-    window.dispatchEvent(new Event("authChange")); // inform other components
+    window.dispatchEvent(new Event("authChange"));
   };
 
   const handleMouseEnter = () => {

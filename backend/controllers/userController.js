@@ -86,17 +86,3 @@ export const getUserById = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-// Get User Profile
-export const getUserProfile = async (req, res) => {
-  try {
-    const user = req.user;
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-    });
-  } catch (err) {
-    res.status(500).json({ message: "Error getting profile" });
-  }
-};

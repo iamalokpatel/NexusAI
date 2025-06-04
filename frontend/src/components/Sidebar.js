@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import api from "../utils/api";
 import { PiChatsCircleBold } from "react-icons/pi";
+import { useNavigate } from "react-router-dom";
 
 const Sidebar = ({ onSelectChat, selectedChatId }) => {
   const [chats, setChats] = useState([]);
@@ -9,6 +10,7 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
   const [editTitle, setEditTitle] = useState("");
   const [menuOpenId, setMenuOpenId] = useState(null);
 
+  const navigate = useNavigate();
   const editInputRef = useRef(null);
   const hideTimeoutRef = useRef(null);
 
@@ -71,7 +73,7 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
     const userId = localStorage.getItem("userId");
     if (!userId) {
       alert("Please login first.");
-      return;
+      navigate("/login");
     }
 
     try {
@@ -85,7 +87,6 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
       onSelectChat?.(savedChat._id);
     } catch (error) {
       console.error("Error creating chat:", error);
-      alert("Failed to create chat.");
     }
   };
 
@@ -135,10 +136,10 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
     <div className="w-64 bg-[#181818] text-white h-screen p-4 flex flex-col">
       <button
         onClick={handleNewChat}
-        className="w-full flex items-center gap-3 hover:bg-[#1C1C1C] py-2 px-3 rounded-lg mb-4"
+        className="w-full h-[46px] flex items-center gap-3 hover:bg-[#1C1C1C] pb-3  px-3 rounded-lg mb-4 border-b border-gray-800 "
       >
         <PiChatsCircleBold size={20} />
-        <span className="text-base">New Chat</span>
+        <span className="text-base shadow-lg">New Chat</span>
       </button>
 
       <div className="space-y-2 overflow-y-auto max-h-[calc(100vh-4rem)] flex-1">
@@ -147,8 +148,10 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
         )}
 
         {!loading && chats.length === 0 && (
-          <div className="text-gray-400 text-center mt-4">
-            No chats yet. Create a new chat!
+          <div className="text-gray-400  mt-3 ml-2">
+            No chats yet.
+            <br />
+            Create a new chat!
           </div>
         )}
 

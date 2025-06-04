@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { useNavigate } from "react-router-dom";
 
 const Messages = () => {
   const [messages, setMessages] = useState([]);
@@ -13,6 +14,16 @@ const Messages = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const messagesEndRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
+    }
+  }, []);
 
   const renderMessageContent = (content) => {
     const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/gm;
@@ -79,27 +90,38 @@ const Messages = () => {
       const chatMessages = [];
 
       res.data.forEach((msg) => {
-        if (msg.question) {
+        if (msg.question)
           chatMessages.push({ role: "user", content: msg.question });
-        }
-        if (msg.answer) {
+        if (msg.answer)
           chatMessages.push({
             role: msg.role || "cohere",
             content: msg.answer,
           });
-        }
       });
 
       setMessages(chatMessages);
-      setSidebarOpen(false); // close sidebar after selection on mobile
+      setSidebarOpen(false);
     } catch (err) {
       console.error("Failed to fetch messages for chat", err);
+    }
+  };
+
+  const handleInputClick = () => {
+    if (!isLoggedIn) {
+      navigate("/login");
+    } else if (!selectedChatId) {
+      alert("Please select or create a chat first.");
     }
   };
 
   const handleSend = async () => {
     const question = input.trim();
     if (!question || loading || !selectedChatId) return;
+
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
 
     setMessages((prev) => [...prev, { role: "user", content: question }]);
     setInput("");
@@ -122,18 +144,15 @@ const Messages = () => {
         const textSoFar = fullAnswer.slice(0, i + 1);
 
         setMessages((prevMessages) => {
-          const updatedMessages = [...prevMessages];
-          updatedMessages[updatedMessages.length - 1] = {
-            role,
-            content: textSoFar,
-          };
-          return updatedMessages;
+          const updated = [...prevMessages];
+          updated[updated.length - 1] = { role, content: textSoFar };
+          return updated;
         });
 
         await new Promise((res) => setTimeout(res, 5));
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error sending message:", error);
       setMessages((prev) => [
         ...prev,
         { role: "error", content: "Failed to get response. Try again." },
@@ -164,7 +183,6 @@ const Messages = () => {
 
   return (
     <div className="w-full flex" role="main" aria-label="Message with Cohere">
-      {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <Sidebar
           onSelectChat={handleChatSelect}
@@ -172,7 +190,6 @@ const Messages = () => {
         />
       </div>
 
-      {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-50 bg-black bg-opacity-50 md:hidden"
@@ -192,8 +209,6 @@ const Messages = () => {
 
       <div className="w-full flex flex-col pb-12 md:pb-6 bg-[#212121] h-screen md:h-auto">
         <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
-
-        {/* Toggle Sidebar Button on Mobile */}
         <button
           className="md:hidden pb-4 pl-4 text-white text-xl self-start"
           onClick={() => setSidebarOpen(true)}
@@ -203,8 +218,7 @@ const Messages = () => {
         </button>
 
         <div
-          className="space-y-2 overflow-y-scroll p-2 bg-[#212121] scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 flex-grow text-sm text-white border-t border-black
-  h-screen md:h-96"
+          className="space-y-2 overflow-y-scroll p-2 bg-[#212121] scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 flex-grow text-sm text-white border-t border-black h-screen md:h-96"
           aria-live="polite"
         >
           {messages.length === 0 && !loading && (
@@ -220,8 +234,8 @@ const Messages = () => {
               key={idx}
               className={`p-3 rounded whitespace-pre-wrap ${
                 msg.role === "user"
-                  ? " text-white text-right"
-                  : " text-white text-left"
+                  ? "text-white text-right"
+                  : "text-white text-left"
               }`}
             >
               <strong>{getRoleLabel(msg.role)}:</strong>
@@ -235,8 +249,7 @@ const Messages = () => {
         <div className="mt-5 flex justify-center px-4">
           <div className="relative w-full max-w-2xl px-2">
             <input
-              className="w-full rounded-full p-8 pr-14 bg-[#252525] text-white shadow-[0_4px_20px_rgba(0,0,0,0.6)] 
-               focus:outline-none focus:ring-1 focus:ring-[#333333] focus:ring-opacity-50 focus:ring-offset-0"
+              className="w-full rounded-full p-8 pr-14 bg-[#252525] cursor-text text-white shadow-[0_4px_20px_rgba(0,0,0,0.6)] focus:outline-none focus:ring-1 focus:ring-[#333333] focus:ring-opacity-50"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={
@@ -244,15 +257,16 @@ const Messages = () => {
                   ? "Ask something..."
                   : "Select or create a chat first"
               }
+              onClick={handleInputClick}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !loading) handleSend();
               }}
-              disabled={loading || !selectedChatId}
+              disabled={loading}
               aria-label="Type your question here"
             />
             <button
               onClick={handleSend}
-              className="absolute right-7 top-1/2 -translate-y-1/2 px-4 py-3  text-white bg-[#2E2E2E] rounded-full disabled:opacity-50"
+              className="absolute right-7 top-1/2 -translate-y-1/2 px-4 py-3 cursor-pointer text-white bg-[#2E2E2E] rounded-full disabled:opacity-50"
               disabled={loading || !selectedChatId}
               aria-label="Send question"
             >

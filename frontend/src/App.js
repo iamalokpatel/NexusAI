@@ -11,7 +11,6 @@ function App() {
         <Route path="/" element={<Messages />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        {/* 404 fallback route */}
         <Route
           path="*"
           element={
