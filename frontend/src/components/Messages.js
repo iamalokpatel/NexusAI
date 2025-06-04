@@ -190,8 +190,8 @@ const Messages = () => {
                   : msg.role === "cohere"
                   ? " text-white text-left"
                   : msg.role === "database"
-                  ? "bg-yellow-600 text-black text-left"
-                  : "bg-red-600 text-white text-left"
+                  ? "text-white text-left"
+                  : "text-white text-left"
               }`}
             >
               <strong>{getRoleLabel(msg.role)}:</strong>
@@ -202,30 +202,33 @@ const Messages = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="mt-4 flex px-2">
-          <input
-            className="flex-1 border rounded p-2 bg-gray-100 text-black"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={
-              selectedChatId
-                ? "Ask something..."
-                : "Select or create a chat first"
-            }
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !loading) handleSend();
-            }}
-            disabled={loading || !selectedChatId}
-            aria-label="Type your question here"
-          />
-          <button
-            onClick={handleSend}
-            className="ml-2 px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
-            disabled={loading || !selectedChatId}
-            aria-label="Send question"
-          >
-            {loading ? "Sending..." : "Send"}
-          </button>
+        <div className="mt-4 flex justify-center px-4">
+          <div className="relative w-full max-w-2xl px-2">
+            <input
+              className="w-full rounded-full p-8 pr-14 bg-[#252525] text-white shadow-[0_4px_20px_rgba(0,0,0,0.6)] 
+               focus:outline-none focus:ring-1 focus:ring-[#333333] focus:ring-opacity-50 focus:ring-offset-0"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={
+                selectedChatId
+                  ? "Ask something..."
+                  : "Select or create a chat first"
+              }
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !loading) handleSend();
+              }}
+              disabled={loading || !selectedChatId}
+              aria-label="Type your question here"
+            />
+            <button
+              onClick={handleSend}
+              className="absolute right-7 top-1/2 -translate-y-1/2 px-4 py-3  text-white bg-[#2E2E2E] hover:bg-blue-700 rounded-full disabled:opacity-50"
+              disabled={loading || !selectedChatId}
+              aria-label="Send question"
+            >
+              🡹
+            </button>
+          </div>
         </div>
       </div>
     </div>

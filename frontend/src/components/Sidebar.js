@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import api from "../utils/api";
+import { PiChatsCircleBold } from "react-icons/pi";
 
 const Sidebar = ({ onSelectChat, selectedChatId }) => {
   const [chats, setChats] = useState([]);
@@ -134,9 +135,10 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
     <div className="w-64 bg-[#181818] text-white h-screen p-4 flex flex-col">
       <button
         onClick={handleNewChat}
-        className="w-full bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded mb-4"
+        className="w-full flex items-center gap-3 hover:bg-[#1C1C1C] py-2 px-3 rounded-lg mb-4"
       >
-        + New Chat
+        <PiChatsCircleBold size={20} />
+        <span className="text-base">New Chat</span>
       </button>
 
       <div className="space-y-2 overflow-y-auto max-h-[calc(100vh-4rem)] flex-1">
@@ -157,8 +159,8 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
             <div
               key={chatId}
               onClick={() => onSelectChat?.(chatId)}
-              className={`bg-gray-800 p-3 rounded hover:bg-gray-700 flex justify-between items-center cursor-pointer ${
-                selectedChatId === chatId ? "border-2 border-blue-500" : ""
+              className={` px-4 py-[4px] rounded-lg hover:bg-[#1C1C1C] flex justify-between items-center cursor-pointer ${
+                selectedChatId === chatId ? "bg-[#1E1E1E]" : ""
               }`}
             >
               {editingChatId === chatId ? (
