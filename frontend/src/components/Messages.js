@@ -11,9 +11,9 @@ const Messages = () => {
   const [loading, setLoading] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // 🔍 Render message with code highlighting
   const renderMessageContent = (content) => {
     const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/gm;
     const parts = [];
@@ -91,6 +91,7 @@ const Messages = () => {
       });
 
       setMessages(chatMessages);
+      setSidebarOpen(false); // close sidebar after selection on mobile
     } catch (err) {
       console.error("Failed to fetch messages for chat", err);
     }
@@ -163,13 +164,44 @@ const Messages = () => {
 
   return (
     <div className="w-full flex" role="main" aria-label="Message with Cohere">
-      <Sidebar
-        onSelectChat={handleChatSelect}
-        selectedChatId={selectedChatId}
-      />
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block">
+        <Sidebar
+          onSelectChat={handleChatSelect}
+          selectedChatId={selectedChatId}
+        />
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        >
+          <div
+            className="w-64 h-full bg-[#1c1c1c] shadow-lg transform transition-transform duration-300 ease-in-out translate-x-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Sidebar
+              onSelectChat={handleChatSelect}
+              selectedChatId={selectedChatId}
+            />
+          </div>
+        </div>
+      )}
 
       <div className="w-full flex flex-col pb-4 bg-[#212121]">
         <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+
+        {/* Toggle Sidebar Button on Mobile */}
+        <button
+          className="md:hidden p-4 text-white text-xl"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open Sidebar"
+        >
+          ☰
+        </button>
+
         <div
           className="space-y-2 h-96 overflow-y-scroll p-2 bg-[#212121] scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 flex-grow text-sm text-white border-t border-black"
           aria-live="polite"
@@ -188,11 +220,7 @@ const Messages = () => {
               className={`p-3 rounded whitespace-pre-wrap ${
                 msg.role === "user"
                   ? " text-white text-right"
-                  : msg.role === "cohere"
-                  ? " text-white text-left"
-                  : msg.role === "database"
-                  ? "text-white text-left"
-                  : "text-white text-left"
+                  : " text-white text-left"
               }`}
             >
               <strong>{getRoleLabel(msg.role)}:</strong>
