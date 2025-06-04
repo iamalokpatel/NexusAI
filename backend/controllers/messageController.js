@@ -81,7 +81,6 @@ export const getMessagesByChat = async (req, res) => {
     }
 
     const messages = await Message.find({ chatId }).sort({ createdAt: 1 });
-    console.log(messages);
     res.status(200).json(messages);
   } catch (err) {
     console.error("Error in getMessagesByChat:", err);

@@ -6,8 +6,10 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
   const [loading, setLoading] = useState(false);
   const [editingChatId, setEditingChatId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
+  const [menuOpenId, setMenuOpenId] = useState(null);
 
   const editInputRef = useRef(null);
+  const hideTimeoutRef = useRef(null);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -34,6 +36,36 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
     }
   }, [editingChatId]);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest(".menu-parent")) {
+        setMenuOpenId(null);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  const handleMouseEnter = (chatId) => {
+    clearTimeout(hideTimeoutRef.current);
+    setMenuOpenId(chatId);
+  };
+
+  const handleMouseLeave = () => {
+    hideTimeoutRef.current = setTimeout(() => {
+      setMenuOpenId(null);
+    }, 400);
+  };
+
+  const toggleMenu = (e, chatId) => {
+    e.stopPropagation();
+    if (menuOpenId === chatId) {
+      setMenuOpenId(null);
+    } else {
+      setMenuOpenId(chatId);
+    }
+  };
+
   const handleNewChat = async () => {
     const userId = localStorage.getItem("userId");
     if (!userId) {
@@ -47,7 +79,6 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
         title: newChatTitle,
         userId,
       });
-
       const savedChat = response.data;
       setChats([savedChat, ...chats]);
       onSelectChat?.(savedChat._id);
@@ -69,7 +100,6 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
   const handleEditSubmit = async (chatId) => {
     try {
       await api.put(`/chats/${chatId}`, { title: editTitle });
-
       setChats((prev) =>
         prev.map((chat) =>
           (chat._id || chat.id) === chatId
@@ -91,13 +121,8 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
         (chat) => (chat._id || chat.id) !== chatId
       );
       setChats(updatedChats);
-
       if (selectedChatId === chatId) {
-        if (updatedChats.length > 0) {
-          onSelectChat?.(updatedChats[0]._id || updatedChats[0].id);
-        } else {
-          onSelectChat?.(null);
-        }
+        onSelectChat?.(updatedChats[0]?._id || updatedChats[0]?.id || null);
       }
     } catch (error) {
       console.error("Failed to delete chat:", error);
@@ -110,7 +135,6 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
       <button
         onClick={handleNewChat}
         className="w-full bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded mb-4"
-        aria-label="Create new chat"
       >
         + New Chat
       </button>
@@ -136,8 +160,6 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
               className={`bg-gray-800 p-3 rounded hover:bg-gray-700 flex justify-between items-center cursor-pointer ${
                 selectedChatId === chatId ? "border-2 border-blue-500" : ""
               }`}
-              role="button"
-              aria-pressed={selectedChatId === chatId}
             >
               {editingChatId === chatId ? (
                 <>
@@ -151,7 +173,6 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
                       if (e.key === "Enter") handleEditSubmit(chatId);
                     }}
                     className="bg-gray-700 text-white rounded px-2 py-1 flex-grow mr-2"
-                    aria-label="Edit chat title"
                   />
                   <button
                     onClick={(e) => {
@@ -167,34 +188,42 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
                 <>
                   <span className="truncate max-w-[120px]">{chat.title}</span>
 
-                  <div className="relative group">
+                  <div
+                    className="relative menu-parent"
+                    onMouseEnter={() => handleMouseEnter(chatId)}
+                    onMouseLeave={handleMouseLeave}
+                  >
                     <button
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => toggleMenu(e, chatId)}
                       className="px-2 py-1 rounded hover:bg-gray-700"
-                      aria-label="Chat options"
                     >
                       &#x22EE;
                     </button>
-                    <div className="absolute right-0 mt-2 w-24 bg-gray-700 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditClick(chat);
-                        }}
-                        className="block w-full text-left px-3 py-2 hover:bg-gray-600"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(chatId);
-                        }}
-                        className="block w-full text-left px-3 py-2 hover:bg-red-600"
-                      >
-                        Delete
-                      </button>
-                    </div>
+
+                    {menuOpenId === chatId && (
+                      <div className="absolute right-0 mt-2 w-24 bg-gray-700 rounded shadow-lg z-10">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditClick(chat);
+                            setMenuOpenId(null);
+                          }}
+                          className="block w-full text-left px-3 py-2 hover:bg-gray-600"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(chatId);
+                            setMenuOpenId(null);
+                          }}
+                          className="block w-full text-left px-3 py-2 hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </>
               )}

@@ -1,19 +1,36 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { FaUserCircle } from "react-icons/fa";
 
-const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
+const Navbar = () => {
   const [showMenu, setShowMenu] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const timeoutRef = useRef(null);
   const navigate = useNavigate();
 
+  // Check localStorage token on mount and on 'authChange' event
+  useEffect(() => {
+    const checkLogin = () => {
+      const token = localStorage.getItem("token");
+      setIsLoggedIn(!!token);
+    };
+
+    checkLogin();
+
+    window.addEventListener("authChange", checkLogin);
+    return () => window.removeEventListener("authChange", checkLogin);
+  }, []);
+
   const handleLogout = () => {
-    setIsLoggedIn(false); // logout logic
+    localStorage.removeItem("token"); // remove token on logout
+    localStorage.removeItem("userId");
+    setIsLoggedIn(false);
     setShowMenu(false);
+    navigate("/login");
+    window.dispatchEvent(new Event("authChange")); // inform other components
   };
 
   const handleMouseEnter = () => {
-    // Clear any existing timeout to prevent accidental hide
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -21,10 +38,9 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
   };
 
   const handleMouseLeave = () => {
-    // Delay hiding by 1 second
     timeoutRef.current = setTimeout(() => {
       setShowMenu(false);
-    }, 500);
+    }, 400);
   };
 
   return (
@@ -68,10 +84,7 @@ const Navbar = ({ isLoggedIn, setIsLoggedIn }) => {
             ) : (
               <div
                 className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-                onClick={() => {
-                  handleLogout();
-                  setShowMenu(false);
-                }}
+                onClick={handleLogout}
               >
                 Logout
               </div>

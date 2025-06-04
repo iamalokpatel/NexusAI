@@ -20,6 +20,7 @@ const Login = () => {
         localStorage.setItem("token", token);
         localStorage.setItem("userId", user._id);
         window.dispatchEvent(new Event("authChange"));
+        alert("Login Successful");
         navigate("/");
       }
     } catch (error) {
