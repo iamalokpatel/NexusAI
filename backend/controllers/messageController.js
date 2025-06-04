@@ -19,49 +19,44 @@ export const handleMessage = async (req, res) => {
 
     const trimmedQuestion = question.trim().toLowerCase();
 
-    // Get previous messages for the chat
-    const allMessages = await Message.find({ chatId });
+    // 🔄 Get all messages across all chats for similarity check
+    const allMessages = await Message.find({});
     const allQuestions = allMessages
       .map((msg) => msg.question?.toLowerCase())
       .filter(Boolean);
 
-    // If no messages yet, generate answer and save
-    if (allQuestions.length === 0) {
-      const answer = await callCohere(trimmedQuestion);
-
-      const savedMessage = await Message.create({
-        chatId,
-        question: trimmedQuestion,
-        answer,
-        role: "cohere", // explicitly set role
-      });
-
-      return res.json({ from: "cohere", message: savedMessage });
-    }
-
+    // 🔍 Check for similar question in all chats
     const { bestMatch, bestMatchIndex } = stringSimilarity.findBestMatch(
       trimmedQuestion,
       allQuestions
     );
 
-    // If similar question exists, return existing answer
     if (bestMatch.rating >= SIMILARITY_THRESHOLD) {
+      // ♻️ Reuse answer from database
+      const reusedAnswer = allMessages[bestMatchIndex].answer;
+
+      // 📥 Still store this new message under current chatId
+      const savedMessage = await Message.create({
+        chatId,
+        question: trimmedQuestion,
+        answer: reusedAnswer,
+        role: "database", // mark reused
+      });
+
       return res.json({
         from: "database",
-        message: {
-          ...allMessages[bestMatchIndex]._doc,
-          role: "database", // override role for display
-        },
+        message: savedMessage,
       });
     }
 
-    // If not found, call Cohere and save new message
+    // 🤖 If not found, generate new answer using Cohere
     const answer = await callCohere(trimmedQuestion);
+
     const savedMessage = await Message.create({
       chatId,
       question: trimmedQuestion,
       answer,
-      role: "cohere", // explicitly set role
+      role: "cohere",
     });
 
     res.json({ from: "cohere", message: savedMessage });

@@ -167,6 +167,7 @@ const Messages = () => {
         onSelectChat={handleChatSelect}
         selectedChatId={selectedChatId}
       />
+
       <div className="w-full flex flex-col pb-4 bg-[#212121]">
         <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
         <div
@@ -222,7 +223,7 @@ const Messages = () => {
             />
             <button
               onClick={handleSend}
-              className="absolute right-7 top-1/2 -translate-y-1/2 px-4 py-3  text-white bg-[#2E2E2E] hover:bg-blue-700 rounded-full disabled:opacity-50"
+              className="absolute right-7 top-1/2 -translate-y-1/2 px-4 py-3  text-white bg-[#2E2E2E] rounded-full disabled:opacity-50"
               disabled={loading || !selectedChatId}
               aria-label="Send question"
             >
