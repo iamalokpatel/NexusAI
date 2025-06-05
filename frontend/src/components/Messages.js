@@ -7,6 +7,15 @@ import api from "../utils/api";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 
+const LoadingDots = () => (
+  <div className="flex space-x-2 items-center text-gray-400 py-2 animate-pulse">
+    <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" />
+    <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce delay-150" />
+    <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce delay-300" />
+    <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce delay-300" />
+  </div>
+);
+
 const Messages = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -42,6 +51,10 @@ const Messages = () => {
   };
 
   const renderMessageContent = (content) => {
+    if (content === "__loading__") {
+      return <LoadingDots />;
+    }
+
     const parts = [];
     const lines = content.split("\n");
     let inCodeBlock = false;
@@ -60,7 +73,7 @@ const Messages = () => {
       }
     };
 
-    lines.forEach((line, idx) => {
+    lines.forEach((line) => {
       const codeBlockStart = line.trim().match(/^```(\w*)?/);
 
       if (codeBlockStart) {
@@ -108,7 +121,7 @@ const Messages = () => {
       parts.push(
         <div
           key={`code-unclosed-${parts.length}`}
-          className="my-2 rounded overflow-auto border border-yellow-700"
+          className="my-2 rounded overflow-auto border border-gray-700 border-opacity-50"
         >
           <SyntaxHighlighter
             language={codeLang}
@@ -173,7 +186,12 @@ const Messages = () => {
       return;
     }
 
-    setMessages((prev) => [...prev, { role: "user", content: question }]);
+    // Step 1: Show user question and spinner immediately
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: question },
+      { role: "cohere", content: "__loading__" },
+    ]);
     setInput("");
     setLoading(true);
 
@@ -182,14 +200,13 @@ const Messages = () => {
         question,
         chatId: selectedChatId,
       });
-      const { message, from } = res.data;
 
+      const { message, from } = res.data;
       const role =
         message?.role || (from === "database" ? "database" : "cohere");
       const fullAnswer = message?.answer || "";
 
-      setMessages((prev) => [...prev, { role, content: "" }]);
-
+      // Step 2: Gradually replace spinner with actual response
       for (let i = 0; i < fullAnswer.length; i++) {
         const partial = fullAnswer.slice(0, i + 1);
         setMessages((prev) => {
@@ -202,7 +219,7 @@ const Messages = () => {
     } catch (error) {
       console.error("Send failed:", error);
       setMessages((prev) => [
-        ...prev,
+        ...prev.slice(0, -1), // remove loading message
         { role: "error", content: "Failed to get response. Try again." },
       ]);
     } finally {
