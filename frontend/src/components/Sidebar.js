@@ -167,7 +167,7 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
               }`}
             >
               {editingChatId === chatId ? (
-                <>
+                <div className="relative w-[16rem] ml-[-16px]">
                   <input
                     ref={editInputRef}
                     type="text"
@@ -177,18 +177,18 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleEditSubmit(chatId);
                     }}
-                    className="bg-gray-700 text-white rounded px-2 py-1 flex-grow mr-2"
+                    className="w-[14rem] bg-[#1C1C1C] text-white rounded-lg px-2 py-2 focus:outline-none focus:ring-0 focus:border-transparent"
                   />
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleEditSubmit(chatId);
                     }}
-                    className="bg-green-600 px-3 py-1 rounded hover:bg-green-700"
+                    className="absolute top-2 right-2 text-xs  shadow shadow-[#181818] px-3 py-1 rounded-lg"
                   >
                     Save
                   </button>
-                </>
+                </div>
               ) : (
                 <>
                   <span className="truncate max-w-[120px]">{chat.title}</span>
@@ -206,14 +206,14 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
                     </button>
 
                     {menuOpenId === chatId && (
-                      <div className="absolute right-0 mt-2 w-24 bg-gray-700 rounded shadow-lg z-10">
+                      <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-12  bg-[#333333]  rounded-lg shadow-lg z-10">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleEditClick(chat);
                             setMenuOpenId(null);
                           }}
-                          className="block w-full text-left px-3 py-2 hover:bg-gray-600"
+                          className="block w-full text-xs flex center justify-center px-6 py-1 rounded-lg hover:bg-[#222222] "
                         >
                           Edit
                         </button>
@@ -223,7 +223,7 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
                             handleDelete(chatId);
                             setMenuOpenId(null);
                           }}
-                          className="block w-full text-left px-3 py-2 hover:bg-red-600"
+                          className="block w-full text-xs flex center justify-center px-4 pb-1 rounded-lg hover:bg-red-600"
                         >
                           Delete
                         </button>

@@ -58,11 +58,11 @@ const Navbar = () => {
         />
 
         {showMenu && (
-          <div className="absolute right-0 mt-2 w-40 bg-white text-black rounded shadow-lg z-10">
+          <div className="absolute right-0 mt-2 w-40  bg-[#333333] text-[444444] rounded shadow-lg z-10">
             {!isLoggedIn ? (
               <>
                 <div
-                  className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                  className="px-4 py-2 flex center justify-center cursor-pointer"
                   onClick={() => {
                     navigate("/login");
                     setShowMenu(false);
@@ -71,7 +71,7 @@ const Navbar = () => {
                   Login
                 </div>
                 <div
-                  className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                  className="px-4 py-2 flex center justify-center cursor-pointer"
                   onClick={() => {
                     navigate("/register");
                     setShowMenu(false);
@@ -82,7 +82,7 @@ const Navbar = () => {
               </>
             ) : (
               <div
-                className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                className="px-4 py-2 flex center justify-center cursor-pointer"
                 onClick={handleLogout}
               >
                 Logout
