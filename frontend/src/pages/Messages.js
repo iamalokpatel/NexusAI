@@ -1,7 +1,6 @@
 import api from "../utils/api";
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
 import Sidebar from "../components/Sidebar/Sidebar";
 import Navbar from "../components/Navbar";
 import ChatMessage from "../components/Messages/ChatMessage";
@@ -164,6 +163,8 @@ const Messages = () => {
           ))}
           <div ref={messagesEndRef} />
         </div>
+
+        {/*  Chat Input */}
 
         <div className="mt-5 flex justify-center px-4">
           <div className="relative w-full max-w-2xl px-2">

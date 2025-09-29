@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import api from "../../utils/api";
 import { PiChatsCircleBold } from "react-icons/pi";
 import { useNavigate } from "react-router-dom";
-import ChatList from "./ChatList";
+import ChatItem from "./ChatItem";
 
 const Sidebar = ({ onSelectChat, selectedChatId }) => {
   const [chats, setChats] = useState([]);
@@ -104,6 +104,20 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
     }
   };
 
+  if (loading)
+    return (
+      <div className="text-gray-400 text-center mt-4">Loading chats...</div>
+    );
+
+  if (chats.length === 0)
+    return (
+      <div className="text-gray-400 mt-3 ml-2">
+        No chats yet.
+        <br />
+        Create a new chat!
+      </div>
+    );
+
   return (
     <div className="w-64 bg-[#181818] text-white h-screen p-4 flex flex-col">
       <button
@@ -115,22 +129,26 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
       </button>
 
       <div className="space-y-2 overflow-y-auto max-h-[calc(100vh-4rem)] flex-1">
-        <ChatList
-          chats={chats}
-          loading={loading}
-          selectedChatId={selectedChatId}
-          onSelectChat={onSelectChat}
-          onEditClick={handleEditClick}
-          onDelete={handleDelete}
-          menuOpenId={menuOpenId}
-          toggleMenu={toggleMenu}
-          setMenuOpenId={setMenuOpenId}
-          editingChatId={editingChatId}
-          editTitle={editTitle}
-          setEditTitle={setEditTitle}
-          handleEditSubmit={handleEditSubmit}
-          editInputRef={editInputRef}
-        />
+        <>
+          {chats.map((chat) => (
+            <ChatItem
+              key={chat._id || chat.id}
+              chat={chat}
+              selected={selectedChatId === (chat._id || chat.id)}
+              onSelect={onSelectChat}
+              onEditClick={handleEditClick}
+              onDelete={handleDelete}
+              menuOpenId={menuOpenId}
+              toggleMenu={toggleMenu}
+              setMenuOpenId={setMenuOpenId}
+              editingChatId={editingChatId}
+              editTitle={editTitle}
+              setEditTitle={setEditTitle}
+              handleEditSubmit={handleEditSubmit}
+              editInputRef={editInputRef}
+            />
+          ))}
+        </>
       </div>
     </div>
   );
