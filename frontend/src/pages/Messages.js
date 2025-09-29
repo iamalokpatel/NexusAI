@@ -52,13 +52,44 @@ const Messages = () => {
 
   const handleSend = async () => {
     const question = input.trim();
-    if (!question || loading || !selectedChatId) return;
+    if (!question || loading) return;
 
     if (!isLoggedIn) {
       navigate("/login");
       return;
     }
 
+    let chatIdToUse = selectedChatId;
+
+    // If no chat selected, create a new one
+    if (!chatIdToUse) {
+      try {
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          alert("Please login first.");
+          navigate("/login");
+          return;
+        }
+
+        const newChatTitle = `New Chat`;
+        const res = await api.post("/chats", {
+          title: newChatTitle,
+          userId,
+        });
+        const newChat = res.data;
+        chatIdToUse = newChat._id || newChat.id;
+        setSelectedChatId(chatIdToUse);
+      } catch (err) {
+        console.error("Failed to create new chat:", err);
+        setMessages((prev) => [
+          ...prev,
+          { role: "error", content: "Failed to create a new chat. Try again." },
+        ]);
+        return;
+      }
+    }
+
+    // Proceed to send the message
     setMessages((prev) => [
       ...prev,
       { role: "user", content: question },
@@ -70,7 +101,7 @@ const Messages = () => {
     try {
       const res = await api.post("/messages", {
         question,
-        chatId: selectedChatId,
+        chatId: chatIdToUse,
       });
 
       const { message, from } = res.data;
@@ -155,7 +186,7 @@ const Messages = () => {
             <div className="text-center text-gray-500">
               {selectedChatId
                 ? "No messages yet. Start the conversation!"
-                : "Select a chat to start messaging."}
+                : "Select or create a chat to start messaging."}
             </div>
           )}
           {messages.map((msg, idx) => (
@@ -163,8 +194,6 @@ const Messages = () => {
           ))}
           <div ref={messagesEndRef} />
         </div>
-
-        {/*  Chat Input */}
 
         <div className="mt-5 flex justify-center px-4">
           <div className="relative w-full max-w-2xl px-2">
@@ -175,7 +204,7 @@ const Messages = () => {
               placeholder={
                 selectedChatId
                   ? "Ask something..."
-                  : "Select or create a chat first"
+                  : "Type your question to create a new chat"
               }
               onKeyDown={(e) => e.key === "Enter" && !loading && handleSend()}
               disabled={loading}
@@ -184,7 +213,7 @@ const Messages = () => {
             <button
               onClick={handleSend}
               className="absolute right-7 top-1/2 -translate-y-1/2 px-4 py-3 cursor-pointer text-white bg-[#2E2E2E] rounded-full disabled:opacity-50"
-              disabled={loading || !selectedChatId}
+              disabled={loading}
               aria-label="Send"
             >
               🡹

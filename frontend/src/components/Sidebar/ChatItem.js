@@ -1,4 +1,3 @@
-// components/ChatItem.jsx
 const ChatItem = ({
   chat,
   selected,
@@ -35,6 +34,7 @@ const ChatItem = ({
               if (e.key === "Enter") handleEditSubmit(chatId);
             }}
             className="w-[14rem] bg-[#1C1C1C] text-white rounded-lg px-2 py-2 focus:outline-none"
+            placeholder="Edit chat title"
           />
           <button
             onClick={(e) => {
@@ -53,19 +53,20 @@ const ChatItem = ({
             <button
               onClick={(e) => toggleMenu(e, chatId)}
               className="px-2 py-1 rounded hover:bg-gray-700"
+              aria-label="Chat menu"
             >
               &#x22EE;
             </button>
 
             {menuOpenId === chatId && (
-              <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-12 bg-[#333333] rounded-lg shadow-lg z-10">
+              <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-20 bg-[#333333] rounded-lg shadow-lg z-10">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onEditClick(chat);
                     setMenuOpenId(null);
                   }}
-                  className="block w-full text-xs flex justify-center px-6 py-1 hover:bg-[#222222]"
+                  className="block w-full text-xs text-center px-2 py-1 hover:bg-[#222222]"
                 >
                   Edit
                 </button>
@@ -75,7 +76,7 @@ const ChatItem = ({
                     onDelete(chatId);
                     setMenuOpenId(null);
                   }}
-                  className="block w-full text-xs flex justify-center px-4 pb-1 hover:bg-red-600"
+                  className="block w-full text-xs text-center px-2 py-1 hover:bg-red-600"
                 >
                   Delete
                 </button>

@@ -1,4 +1,3 @@
-// components/Sidebar.jsx
 import React, { useState, useEffect, useRef } from "react";
 import api from "../../utils/api";
 import { PiChatsCircleBold } from "react-icons/pi";
@@ -45,11 +44,13 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
     setMenuOpenId((prev) => (prev === chatId ? null : chatId));
   };
 
+  // Updated: returns the newly created chat object
   const handleNewChat = async () => {
     const userId = localStorage.getItem("userId");
     if (!userId) {
       alert("Please login first.");
       navigate("/login");
+      return null;
     }
 
     try {
@@ -59,10 +60,12 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
         userId,
       });
       const savedChat = response.data;
-      setChats([savedChat, ...chats]);
-      onSelectChat?.(savedChat._id);
+      setChats((prev) => [savedChat, ...prev]);
+      onSelectChat?.(savedChat._id || savedChat.id);
+      return savedChat; // return for parent to use
     } catch (error) {
       console.error("Error creating chat:", error);
+      return null;
     }
   };
 
@@ -129,26 +132,24 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
       </button>
 
       <div className="space-y-2 overflow-y-auto max-h-[calc(100vh-4rem)] flex-1">
-        <>
-          {chats.map((chat) => (
-            <ChatItem
-              key={chat._id || chat.id}
-              chat={chat}
-              selected={selectedChatId === (chat._id || chat.id)}
-              onSelect={onSelectChat}
-              onEditClick={handleEditClick}
-              onDelete={handleDelete}
-              menuOpenId={menuOpenId}
-              toggleMenu={toggleMenu}
-              setMenuOpenId={setMenuOpenId}
-              editingChatId={editingChatId}
-              editTitle={editTitle}
-              setEditTitle={setEditTitle}
-              handleEditSubmit={handleEditSubmit}
-              editInputRef={editInputRef}
-            />
-          ))}
-        </>
+        {chats.map((chat) => (
+          <ChatItem
+            key={chat._id || chat.id}
+            chat={chat}
+            selected={selectedChatId === (chat._id || chat.id)}
+            onSelect={onSelectChat}
+            onEditClick={handleEditClick}
+            onDelete={handleDelete}
+            menuOpenId={menuOpenId}
+            toggleMenu={toggleMenu}
+            setMenuOpenId={setMenuOpenId}
+            editingChatId={editingChatId}
+            editTitle={editTitle}
+            setEditTitle={setEditTitle}
+            handleEditSubmit={handleEditSubmit}
+            editInputRef={editInputRef}
+          />
+        ))}
       </div>
     </div>
   );
