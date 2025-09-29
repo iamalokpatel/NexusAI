@@ -1,6 +1,7 @@
+import api from "../utils/api";
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../utils/api";
+
 import Sidebar from "../components/Sidebar/Sidebar";
 import Navbar from "../components/Navbar";
 import ChatMessage from "../components/Messages/ChatMessage";
