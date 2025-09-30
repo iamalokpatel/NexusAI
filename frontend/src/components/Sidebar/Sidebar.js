@@ -148,6 +148,7 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
             setEditTitle={setEditTitle}
             handleEditSubmit={handleEditSubmit}
             editInputRef={editInputRef}
+            setEditingChatId={setEditingChatId}
           />
         ))}
       </div>
