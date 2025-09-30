@@ -125,13 +125,13 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
     <div className="w-64 bg-[#181818] text-white h-screen p-4 flex flex-col">
       <button
         onClick={handleNewChat}
-        className="w-full h-[46px] flex items-center gap-3 hover:bg-[#1C1C1C] pb-3 px-3 rounded-lg mb-4 border-b border-gray-800"
+        className="w-full h-[46px] flex items-center gap-3 hover:bg-[#1C1C1C] pb-3 px-4 rounded-lg mb-4 border-b border-gray-800"
       >
         <PiChatsCircleBold size={20} />
         <span className="text-base shadow-lg">New Chat</span>
       </button>
 
-      <div className="space-y-2 overflow-y-auto max-h-[calc(100vh-4rem)] flex-1">
+      <div className="space-y-2 flex-1">
         {chats.map((chat) => (
           <ChatItem
             key={chat._id || chat.id}

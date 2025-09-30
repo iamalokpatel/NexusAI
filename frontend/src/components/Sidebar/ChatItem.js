@@ -46,7 +46,7 @@ const ChatItem = ({
   return (
     <div
       onClick={() => onSelect(chatId)}
-      className={`py-[4px] rounded-lg flex justify-around items-center cursor-pointer ${
+      className={`pl-4 py-[4px] rounded-lg flex items-center cursor-pointer ${
         selected ? "bg-[#1E1E1E]" : "hover:bg-[#1C1C1C]"
       }`}
     >
@@ -74,8 +74,8 @@ const ChatItem = ({
         </div>
       ) : (
         <>
-          <span className="truncate max-w-[120px]">{chat.title}</span>
-          <div className="relative menu-parent">
+          <span className="truncate max-w-[120px] ">{chat.title}</span>
+          <div className="relative menu-parent ml-auto">
             <button
               onClick={(e) => toggleMenu(e, chatId)}
               className="px-2 py-1 rounded hover:bg-gray-700"
