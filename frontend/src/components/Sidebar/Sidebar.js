@@ -1,19 +1,25 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import api from "../../utils/api";
-import { PiChatsCircleBold } from "react-icons/pi";
+import { LuSquarePen } from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
 import ChatItem from "./ChatItem";
 
-const Sidebar = ({ onSelectChat, selectedChatId }) => {
-  const [chats, setChats] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [editingChatId, setEditingChatId] = useState(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [menuOpenId, setMenuOpenId] = useState(null);
+const Sidebar = ({
+  chats,
+  setChats,
+  onSelectChat,
+  selectedChatId,
+  closeSidebar,
+}) => {
+  const [loading, setLoading] = React.useState(false);
+  const [editingChatId, setEditingChatId] = React.useState(null);
+  const [editTitle, setEditTitle] = React.useState("");
+  const [menuOpenId, setMenuOpenId] = React.useState(null);
 
   const navigate = useNavigate();
   const editInputRef = useRef(null);
 
+  // fetch chats only once (initial load)
   useEffect(() => {
     const fetchChats = async () => {
       const userId = localStorage.getItem("userId");
@@ -30,8 +36,10 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
       }
     };
 
-    fetchChats();
-  }, []);
+    if (!chats || chats.length === 0) {
+      fetchChats();
+    }
+  }, [setChats, chats]);
 
   useEffect(() => {
     if (editingChatId && editInputRef.current) {
@@ -44,7 +52,7 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
     setMenuOpenId((prev) => (prev === chatId ? null : chatId));
   };
 
-  // Updated: returns the newly created chat object
+  // New chat creation
   const handleNewChat = async () => {
     const userId = localStorage.getItem("userId");
     if (!userId) {
@@ -62,7 +70,11 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
       const savedChat = response.data;
       setChats((prev) => [savedChat, ...prev]);
       onSelectChat?.(savedChat._id || savedChat.id);
-      return savedChat; // return for parent to use
+
+      // Close sidebar on mobile after creating new chat
+      closeSidebar?.();
+
+      return savedChat;
     } catch (error) {
       console.error("Error creating chat:", error);
       return null;
@@ -112,7 +124,7 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
       <div className="text-gray-400 text-center mt-4">Loading chats...</div>
     );
 
-  if (chats.length === 0)
+  if (!chats || chats.length === 0)
     return (
       <div className="text-gray-400 mt-3 ml-2">
         No chats yet.
@@ -122,22 +134,26 @@ const Sidebar = ({ onSelectChat, selectedChatId }) => {
     );
 
   return (
-    <div className="w-64 bg-[#181818] text-white h-screen p-4 flex flex-col">
+    <div className="flex flex-col min-h-screen w-64 bg-[#181818] text-white p-4 sticky top-0">
       <button
         onClick={handleNewChat}
-        className="w-full h-[46px] flex items-center gap-3 hover:bg-[#1C1C1C] pb-3 px-4 rounded-lg mb-4 border-b border-gray-800"
+        className="w-full h-[46px] flex items-center gap-2 hover:bg-[#1C1C1C] pb-3 px-4 rounded-lg mb-4 border-b border-gray-800"
       >
-        <PiChatsCircleBold size={20} />
+        <LuSquarePen />
         <span className="text-base shadow-lg">New Chat</span>
       </button>
 
-      <div className="space-y-2 flex-1">
+      {/* Chat list */}
+      <div className="flex-1 overflow-y-auto space-y-2">
         {chats.map((chat) => (
           <ChatItem
             key={chat._id || chat.id}
             chat={chat}
             selected={selectedChatId === (chat._id || chat.id)}
-            onSelect={onSelectChat}
+            onSelect={(id) => {
+              onSelectChat(id);
+              closeSidebar?.(); // close sidebar on mobile after selecting chat
+            }}
             onEditClick={handleEditClick}
             onDelete={handleDelete}
             menuOpenId={menuOpenId}

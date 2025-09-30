@@ -43,8 +43,8 @@ const Navbar = () => {
   };
 
   return (
-    <div className="w-full bg-[#212121] text-white p-4 flex justify-between items-center relative">
-      <h1 className="text-lg font-bold">My Chat App</h1>
+    <div className="w-full bg-[#212121] text-white p-4 flex justify-between items-center relative border-b border-black sticky top-0">
+      <h1 className="text-lg font-bold ml-8 md:ml-0">NexusAI</h1>
 
       <div
         className="relative"

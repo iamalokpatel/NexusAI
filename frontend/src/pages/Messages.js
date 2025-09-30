@@ -1,11 +1,12 @@
-import api from "../utils/api";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar/Sidebar";
 import Navbar from "../components/Navbar";
 import ChatMessage from "../components/Messages/ChatMessage";
+import api from "../utils/api";
 
 const Messages = () => {
+  const [chats, setChats] = useState([]);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,14 +17,17 @@ const Messages = () => {
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
 
+  // Check login
   useEffect(() => {
     setIsLoggedIn(!!localStorage.getItem("token"));
   }, []);
 
+  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Select chat and fetch messages
   const handleChatSelect = async (chatId) => {
     setSelectedChatId(chatId);
     setMessages([]);
@@ -50,6 +54,7 @@ const Messages = () => {
     }
   };
 
+  // Send message
   const handleSend = async () => {
     const question = input.trim();
     if (!question || loading) return;
@@ -61,7 +66,7 @@ const Messages = () => {
 
     let chatIdToUse = selectedChatId;
 
-    // If no chat selected, create a new one
+    // Create new chat if none selected
     if (!chatIdToUse) {
       try {
         const userId = localStorage.getItem("userId");
@@ -71,14 +76,12 @@ const Messages = () => {
           return;
         }
 
-        const newChatTitle = `New Chat`;
-        const res = await api.post("/chats", {
-          title: newChatTitle,
-          userId,
-        });
+        const newChatTitle = `New Chat ${chats.length + 1}`;
+        const res = await api.post("/chats", { title: newChatTitle, userId });
         const newChat = res.data;
         chatIdToUse = newChat._id || newChat.id;
         setSelectedChatId(chatIdToUse);
+        setChats((prev) => [newChat, ...prev]);
       } catch (err) {
         console.error("Failed to create new chat:", err);
         setMessages((prev) => [
@@ -89,7 +92,7 @@ const Messages = () => {
       }
     }
 
-    // Proceed to send the message
+    // Add user message
     setMessages((prev) => [
       ...prev,
       { role: "user", content: question },
@@ -103,22 +106,20 @@ const Messages = () => {
         question,
         chatId: chatIdToUse,
       });
-
       const { message, from } = res.data;
       const role =
         message?.role || (from === "database" ? "database" : "cohere");
       const fullAnswer = message?.answer || "";
 
+      // Stream response
       let index = 0;
       const len = fullAnswer.length;
-
       while (index < len) {
         let batchSize = 8;
         if (index < len * 0.2) batchSize = 4;
         else if (index > len * 0.8) batchSize = 6;
 
         const partial = fullAnswer.slice(0, index + batchSize);
-
         setMessages((prev) => {
           const updated = [...prev];
           updated[updated.length - 1] = { role, content: partial };
@@ -145,24 +146,30 @@ const Messages = () => {
   };
 
   return (
-    <div className="w-full flex" role="main">
+    <div className="min-h-screen w-full flex" role="main">
+      {/* Sidebar for desktop */}
       <div className="hidden md:block">
         <Sidebar
+          chats={chats}
+          setChats={setChats}
           onSelectChat={handleChatSelect}
           selectedChatId={selectedChatId}
         />
       </div>
 
+      {/* Sidebar overlay for mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-50 bg-black bg-opacity-50 md:hidden"
           onClick={() => setSidebarOpen(false)}
         >
           <div
-            className="w-64 h-full bg-[#1c1c1c] shadow-lg"
+            className="w-64 h-full bg-[#1c1c1c] shadow-lg overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <Sidebar
+              chats={chats}
+              setChats={setChats}
               onSelectChat={handleChatSelect}
               selectedChatId={selectedChatId}
             />
@@ -170,18 +177,21 @@ const Messages = () => {
         </div>
       )}
 
-      <div className="w-full flex flex-col pb-12 md:pb-6 bg-[#212121] h-screen md:h-auto">
+      {/* Main chat area */}
+      <div className="w-full flex flex-col bg-[#212121]">
         <Navbar isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
 
+        {/* Mobile sidebar button */}
         <button
-          className="md:hidden pb-4 pl-4 text-white text-xl self-start"
+          className="md:hidden pb-4 pl-4 text-white text-xl self-start fixed lef-0 top-[1rem]"
           onClick={() => setSidebarOpen(true)}
           aria-label="Open Sidebar"
         >
           ☰
         </button>
 
-        <div className="space-y-2 overflow-y-scroll p-2 bg-[#212121] scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 flex-grow text-sm text-white border-t border-black h-screen md:h-96">
+        {/* Messages list */}
+        <div className="flex-1 md:w-4/6 md:mx-auto px-4 md:px-8 lg:px-10 py-2 items-center text-white justify-center px-4 md:px-8 lg:px-10 py-2 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
           {messages.length === 0 && !loading && (
             <div className="text-center text-gray-500">
               {selectedChatId
@@ -195,10 +205,11 @@ const Messages = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="mt-5 flex justify-center px-4">
-          <div className="relative w-full max-w-2xl px-2">
+        {/* Input area */}
+        <div className="px-4 py-3 flex justify-center sticky bottom-0">
+          <div className="relative w-full max-w-2xl">
             <input
-              className="w-full rounded-full p-8 pr-14 bg-[#252525] cursor-text text-white shadow-[0_4px_20px_rgba(0,0,0,0.6)] focus:outline-none focus:ring-1 focus:ring-[#333333] focus:ring-opacity-50"
+              className="w-full rounded-full p-4 pr-14 bg-[#252525] text-white shadow-[0_4px_20px_rgba(0,0,0,0.6)] focus:outline-none focus:ring-1 focus:ring-[#333333] focus:ring-opacity-50"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={
@@ -206,13 +217,13 @@ const Messages = () => {
                   ? "Ask something..."
                   : "Type your question to create a new chat"
               }
-              onKeyDown={(e) => e.key === "Enter" && !loading && handleSend()}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
               disabled={loading}
               aria-label="Type your question here"
             />
             <button
               onClick={handleSend}
-              className="absolute right-7 top-1/2 -translate-y-1/2 px-4 py-3 cursor-pointer text-white bg-[#2E2E2E] rounded-full disabled:opacity-50"
+              className="absolute right-3 top-1/2 -translate-y-1/2 px-4 py-2 text-white bg-[#2E2E2E] rounded-full disabled:opacity-50"
               disabled={loading}
               aria-label="Send"
             >
