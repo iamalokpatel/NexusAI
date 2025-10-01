@@ -14,11 +14,12 @@ const ChatItem = ({
   setEditTitle,
   handleEditSubmit,
   setEditingChatId,
+  handleError, // ✅ centralized error callback from parent
 }) => {
   const chatId = chat._id || chat.id;
   const wrapperRef = useRef(null);
 
-  // ====== Custom hook yahin define ======
+  // ====== Custom hook for outside click ======
   const useOutsideClick = (ref, callback, active = true) => {
     useEffect(() => {
       if (!active) return;
@@ -32,18 +33,14 @@ const ChatItem = ({
         document.removeEventListener("mousedown", handleClickOutside);
     }, [ref, callback, active]);
   };
-  // ======================================
 
-  // menu ke liye ref
   const menuRef = useRef(null);
 
-  // menu ke bahar click pe close
+  // Close menu on outside click
   useOutsideClick(
     menuRef,
     () => {
-      if (menuOpenId === chatId) {
-        setMenuOpenId(null);
-      }
+      if (menuOpenId === chatId) setMenuOpenId(null);
     },
     menuOpenId === chatId
   );
@@ -52,16 +49,20 @@ const ChatItem = ({
   useEffect(() => {
     if (!editingChatId) return;
 
-    const handleClickOutside = (event) => {
+    const handleClickOutside = async (event) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-        handleEditSubmit(chatId);
-        setEditingChatId(null);
+        try {
+          await handleEditSubmit(chatId);
+          setEditingChatId(null);
+        } catch (err) {
+          handleError?.("Failed to save chat title.", err);
+        }
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [editingChatId, chatId, handleEditSubmit, setEditingChatId]);
+  }, [editingChatId, chatId, handleEditSubmit, setEditingChatId, handleError]);
 
   // Auto focus input when editing starts
   useEffect(() => {
@@ -89,10 +90,14 @@ const ChatItem = ({
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
             onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => {
+            onKeyDown={async (e) => {
               if (e.key === "Enter") {
-                handleEditSubmit(chatId);
-                setEditingChatId(null);
+                try {
+                  await handleEditSubmit(chatId);
+                  setEditingChatId(null);
+                } catch (err) {
+                  handleError?.("Failed to save chat title.", err);
+                }
               }
             }}
             className="bg-[#1E1E1E] text-white rounded-lg w-full py-2 px-3 focus:outline-none text-sm md:text-base"
@@ -127,9 +132,13 @@ const ChatItem = ({
                   Edit
                 </button>
                 <button
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     e.stopPropagation();
-                    onDelete(chatId);
+                    try {
+                      await onDelete(chatId);
+                    } catch (err) {
+                      handleError?.("Failed to delete chat.", err);
+                    }
                     setMenuOpenId(null);
                   }}
                   className="block w-full text-xs md:text-sm text-center px-2 py-1 hover:bg-red-600 hover:text-white rounded-b-lg"

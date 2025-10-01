@@ -36,10 +36,8 @@ const Sidebar = ({
       }
     };
 
-    if (!chats || chats.length === 0) {
-      fetchChats();
-    }
-  }, [setChats, chats]);
+    fetchChats();
+  }, [setChats]);
 
   useEffect(() => {
     if (editingChatId && editInputRef.current) {
@@ -70,10 +68,7 @@ const Sidebar = ({
       const savedChat = response.data;
       setChats((prev) => [savedChat, ...prev]);
       onSelectChat?.(savedChat._id || savedChat.id);
-
-      // Close sidebar on mobile after creating new chat
       closeSidebar?.();
-
       return savedChat;
     } catch (error) {
       console.error("Error creating chat:", error);
@@ -119,20 +114,6 @@ const Sidebar = ({
     }
   };
 
-  if (loading)
-    return (
-      <div className="text-gray-400 text-center mt-4">Loading chats...</div>
-    );
-
-  if (!chats || chats.length === 0)
-    return (
-      <div className="text-gray-400 mt-3 ml-2">
-        No chats yet.
-        <br />
-        Create a new chat!
-      </div>
-    );
-
   return (
     <div className="flex flex-col min-h-screen w-64 bg-[#181818] text-white p-4 sticky top-0">
       <button
@@ -143,30 +124,40 @@ const Sidebar = ({
         <span className="text-base shadow-lg">New Chat</span>
       </button>
 
-      {/* Chat list */}
+      {/* Chat list / Loading / Empty */}
       <div className="flex-1 overflow-y-auto space-y-2">
-        {chats.map((chat) => (
-          <ChatItem
-            key={chat._id || chat.id}
-            chat={chat}
-            selected={selectedChatId === (chat._id || chat.id)}
-            onSelect={(id) => {
-              onSelectChat(id);
-              closeSidebar?.(); // close sidebar on mobile after selecting chat
-            }}
-            onEditClick={handleEditClick}
-            onDelete={handleDelete}
-            menuOpenId={menuOpenId}
-            toggleMenu={toggleMenu}
-            setMenuOpenId={setMenuOpenId}
-            editingChatId={editingChatId}
-            editTitle={editTitle}
-            setEditTitle={setEditTitle}
-            handleEditSubmit={handleEditSubmit}
-            editInputRef={editInputRef}
-            setEditingChatId={setEditingChatId}
-          />
-        ))}
+        {loading ? (
+          <div className="text-gray-400 text-center mt-4">Loading chats...</div>
+        ) : chats && chats.length > 0 ? (
+          chats.map((chat) => (
+            <ChatItem
+              key={chat._id || chat.id}
+              chat={chat}
+              selected={selectedChatId === (chat._id || chat.id)}
+              onSelect={(id) => {
+                onSelectChat(id);
+                closeSidebar?.();
+              }}
+              onEditClick={handleEditClick}
+              onDelete={handleDelete}
+              menuOpenId={menuOpenId}
+              toggleMenu={toggleMenu}
+              setMenuOpenId={setMenuOpenId}
+              editingChatId={editingChatId}
+              editTitle={editTitle}
+              setEditTitle={setEditTitle}
+              handleEditSubmit={handleEditSubmit}
+              editInputRef={editInputRef}
+              setEditingChatId={setEditingChatId}
+            />
+          ))
+        ) : (
+          <div className="text-gray-400 mt-3 ml-2">
+            No chats yet.
+            <br />
+            Create a new chat!
+          </div>
+        )}
       </div>
     </div>
   );
