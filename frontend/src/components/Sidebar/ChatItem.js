@@ -18,7 +18,37 @@ const ChatItem = ({
   const chatId = chat._id || chat.id;
   const wrapperRef = useRef(null);
 
-  // Auto save on clicking outside
+  // ====== Custom hook yahin define ======
+  const useOutsideClick = (ref, callback, active = true) => {
+    useEffect(() => {
+      if (!active) return;
+      const handleClickOutside = (event) => {
+        if (ref.current && !ref.current.contains(event.target)) {
+          callback();
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }, [ref, callback, active]);
+  };
+  // ======================================
+
+  // menu ke liye ref
+  const menuRef = useRef(null);
+
+  // menu ke bahar click pe close
+  useOutsideClick(
+    menuRef,
+    () => {
+      if (menuOpenId === chatId) {
+        setMenuOpenId(null);
+      }
+    },
+    menuOpenId === chatId
+  );
+
+  // Auto save on clicking outside (edit input)
   useEffect(() => {
     if (!editingChatId) return;
 
@@ -30,9 +60,7 @@ const ChatItem = ({
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [editingChatId, chatId, handleEditSubmit, setEditingChatId]);
 
   // Auto focus input when editing starts
@@ -77,7 +105,7 @@ const ChatItem = ({
             {chat.title}
           </span>
 
-          <div className="relative ml-auto">
+          <div className="relative ml-auto" ref={menuRef}>
             <button
               onClick={(e) => toggleMenu(e, chatId)}
               className="px-2 py-1 rounded hover:bg-gray-700 text-sm md:text-base"
